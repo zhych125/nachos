@@ -31,19 +31,19 @@ public class Alarm {
      */
     public void timerInterrupt() {
 	
-	boolean initStatus = Machine.interrupt().disable();
+	
 	
 	while (!wakeTimeList.isEmpty())
 	{
 		if (wakeTimeList.getFirst()<Machine.timer().getTime())
 		{
+			boolean initStatus = Machine.interrupt().disable();
 			wakeTimeList.removeFirst();
 			waitQueue.nextThread().ready();
+			Machine.interrupt().restore(initStatus);
 		}
 		else break;
 	}
-	
-	Machine.interrupt().restore(initStatus);
 	
 	KThread.currentThread().yield();
 	}
@@ -63,18 +63,23 @@ public class Alarm {
      * @see	nachos.machine.Timer#getTime()
      */
     public void waitUntil(long x) {
-	// for now, cheat just to get something working (busy waiting is bad)
-    boolean initStatus = Machine.interrupt().disable();
+
     
     long wakeTime = Machine.timer().getTime() + x;
     
-    wakeTimeList.add(wakeTime);
+    if (Machine.timer().getTime()<wakeTime)
+    {
+
+    	 boolean initStatus = Machine.interrupt().disable();
+    
+    	 wakeTimeList.add(wakeTime);
 	
-    waitQueue.waitForAccess(KThread.currentThread());
+    	 waitQueue.waitForAccess(KThread.currentThread());
     
-    KThread.sleep();
+    	 KThread.sleep();
     
-    Machine.interrupt().restore(initStatus);
+    	 Machine.interrupt().restore(initStatus);
+    }
     }
     private static ThreadQueue waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
     private static LinkedList<Long> wakeTimeList;

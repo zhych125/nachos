@@ -81,7 +81,9 @@ public class Condition2 {
 		
 			thread.ready();
 	}
-		Machine.interrupt().restore(initStatus);
+	
+	Machine.interrupt().restore(initStatus);
+    
     }
 
     private Lock conditionLock;
