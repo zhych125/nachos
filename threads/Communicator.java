@@ -68,7 +68,7 @@ public class Communicator {
     	isListening = false;
     	isSpeaking = false;
     	
-    	speakerWaitQueue.wakeAll();
+    	speakerWaitQueue.wake();
     	
     	lock.release();    	
     }
@@ -100,7 +100,7 @@ public class Communicator {
     	
     	spoken.wake();
     	
-    	listenerWaitQueue.wakeAll();
+    	listenerWaitQueue.wake();
     	
     	lock.release();
     	
@@ -109,10 +109,10 @@ public class Communicator {
     
     private Condition2 speakerWaitQueue;
     private Condition2 listenerWaitQueue;
+    private Condition2 spoken;
     private boolean isFull;
     private boolean isSpeaking;
     private boolean isListening;
     private Lock lock;
-    private Condition2 spoken;
     private int word;
 }
