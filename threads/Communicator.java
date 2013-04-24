@@ -18,10 +18,10 @@ public class Communicator {
     	lock = new Lock();
     	speakerWaitQueue = new Condition2(lock);
     	listenerWaitQueue = new Condition2(lock);
+    	spoken = new Condition2(lock);
+    	isFull = false;
     	isSpeaking = false;
     	isListening = false;
-    	spoken = new Condition2(lock);
-    	listening = new Condition2(lock);
     	
     }
 
@@ -39,30 +39,36 @@ public class Communicator {
     	
     	lock.acquire();
     	
-    	if ( isSpeaking )
+    	while (isFull)
+    	{
+    		listenerWaitQueue.wake();
+    		
+    		speakerWaitQueue.sleep();
+    		
+    	}
+    	
+    	while (isSpeaking)
     	{
     		speakerWaitQueue.sleep();
     	}
+    	
+    	isFull = true;
     	
     	isSpeaking = true;
     	
     	this.word = word;
     	
-    	if ( !isListening )
+    	while (!isListening)
     	{
-    	listenerWaitQueue.wake();
-    	spoken.sleep();
+    		listenerWaitQueue.wake();
+    		spoken.sleep();
+    		
     	}
     	
-    	else
-    		{
-    		listening.wake();
-    		spoken.sleep();
-    		}
-    	
+    	isListening = false;
     	isSpeaking = false;
     	
-    	speakerWaitQueue.wake();
+    	speakerWaitQueue.wakeAll();
     	
     	lock.release();    	
     }
@@ -76,25 +82,26 @@ public class Communicator {
     public int listen() {
     	lock.acquire();
     	
-    	if ( isListening)
+    	while (!isFull)
     	{
+    		speakerWaitQueue.wake();
     		listenerWaitQueue.sleep();
     	}
     	
-    	isListening = true;
+    	while (isListening)
+    		listenerWaitQueue.sleep();
     	
-    	if (!isSpeaking)
-    	{
-    		speakerWaitQueue.wake();
-    		listening.sleep();
-    	}
+    	isListening = true;
     	
     	int receiveMessage = this.word;
     	
-    	isListening = false;
+    	isFull = false;
     	
-    	listenerWaitQueue.wake();
+    	
     	spoken.wake();
+    	
+    	listenerWaitQueue.wakeAll();
+    	
     	lock.release();
     	
 	return receiveMessage;
@@ -102,10 +109,10 @@ public class Communicator {
     
     private Condition2 speakerWaitQueue;
     private Condition2 listenerWaitQueue;
-    private Condition2 spoken;
-    private Condition2 listening;
+    private boolean isFull;
     private boolean isSpeaking;
     private boolean isListening;
     private Lock lock;
+    private Condition2 spoken;
     private int word;
 }
