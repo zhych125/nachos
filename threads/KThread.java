@@ -283,15 +283,17 @@ public class KThread {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
 	Lib.assertTrue(this != currentThread);
+	if	(this.status!=statusFinished&&this.status!=statusNew)
+	{
+		Machine.interrupt().disable();
 	
-	Machine.interrupt().disable();
+		tempThread = currentThread();
 	
-	tempThread = currentThread();
+		sleep();
 	
-	sleep();
-	
-	Machine.interrupt().enable();
-    }
+		Machine.interrupt().enable();
+	}
+	}
 
     /**
      * Create the idle thread. Whenever there are no threads ready to be run,

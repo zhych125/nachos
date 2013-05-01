@@ -75,11 +75,11 @@ public class Condition2 {
 	
 	boolean initStatus = Machine.interrupt().disable();
 	
-	if  (!waitQueue.isEmpty())
+	while  (!waitQueue.isEmpty())
 	{
-		for (KThread thread = waitQueue.removeFirst(); !waitQueue.isEmpty(); thread = waitQueue.removeFirst())
+		KThread thread = waitQueue.removeFirst();
 		
-			thread.ready();
+		thread.ready();
 	}
 	
 	Machine.interrupt().restore(initStatus);

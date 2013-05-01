@@ -39,17 +39,17 @@ public class Communicator {
     	
     	lock.acquire();
     	
+    	while (isSpeaking)
+    	{
+    		speakerWaitQueue.sleep();
+    	}
+    	
     	while (isFull)
     	{
     		listenerWaitQueue.wake();
     		
     		speakerWaitQueue.sleep();
     		
-    	}
-    	
-    	while (isSpeaking)
-    	{
-    		speakerWaitQueue.sleep();
     	}
     	
     	isFull = true;
@@ -82,14 +82,14 @@ public class Communicator {
     public int listen() {
     	lock.acquire();
     	
+    	while (isListening)
+    		listenerWaitQueue.sleep();
+    	
     	while (!isFull)
     	{
     		speakerWaitQueue.wake();
     		listenerWaitQueue.sleep();
     	}
-    	
-    	while (isListening)
-    		listenerWaitQueue.sleep();
     	
     	isListening = true;
     	

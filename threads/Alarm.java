@@ -35,7 +35,7 @@ public class Alarm {
 	
 	while (!wakeTimeList.isEmpty())
 	{
-		if (wakeTimeList.getFirst()<Machine.timer().getTime())
+		if (wakeTimeList.getFirst()<=Machine.timer().getTime())
 		{
 			boolean initStatus = Machine.interrupt().disable();
 			wakeTimeList.removeFirst();
