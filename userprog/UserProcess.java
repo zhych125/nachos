@@ -667,7 +667,7 @@ public class UserProcess {
     private int handleRead (int descriptor,int buffAddr, int size)
 	{
 		Lib.debug(dbgProcess,"\tSystemcall read called " +
-				"with buffer Adrress being:"+buffAddr+", descriptor being"
+				"with buffer Adrress being:"+buffAddr+", descriptor being: "
 				+descriptor+".\n");
 		if (descriptor<0||descriptor>=maxFileNumber||size<0||buffAddr<0)
 			return -1;
@@ -701,7 +701,7 @@ public class UserProcess {
 	private int handleWrite(int descriptor,int buffAddr, int size)
     {
     	Lib.debug(dbgProcess,"\tSystemcall write called " +
-    			"with buffer Adrress being:"+buffAddr+", descriptor being"
+    			"with buffer Adrress being:"+buffAddr+", descriptor being: "
     			+descriptor+".\n");
     	if (descriptor<0||descriptor>=maxFileNumber||size<0||buffAddr<0)
     		return -1;
