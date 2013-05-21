@@ -40,7 +40,7 @@ public class UserProcess {
     childExitStatusLock= new Lock();
     joinPID=null;
     joinLock=new Lock();
-    joinCondition= new Condition(joinLock);
+    joinCondition= new Condition2(joinLock);
 	/**
 	 * allocate maxFileNumber==16 file descriptor
 	 * with 0 being console reading and 1 being console writing
@@ -67,10 +67,21 @@ public class UserProcess {
     }
     
     /**
+     * this method is for data protection purposes
      * @return the private field indicating the unique PID number of the UserProcess
      */
     public int thisPid(){
     	return PID;
+    }
+    
+    /**
+     * close the child console descriptor if the child process can not be forked
+     *  but is initialized with IO console open
+     *  this method is for data protection purposes 
+     * @param i
+     */
+    public void childClose(int i){
+    	handleClose(i);
     }
     
     /**
@@ -83,7 +94,9 @@ public class UserProcess {
     			return true;
     	else return false;    		
     }
+  
     /**
+     * this method is for data protection purposes
      * set the child's private reference parent Process to parent process
      * called in handleExec()
      * @param parent the reference to the parent process
@@ -91,7 +104,9 @@ public class UserProcess {
     public void setParentProcess(UserProcess parent){
     	this.parentProcess=parent;
     }
+    
     /**
+     * this method is for data protection purposes
      * get join flag from the parent process
      * @return get join flag
      */
@@ -101,6 +116,11 @@ public class UserProcess {
     	else return 0;
     }
     
+    /**
+     * this method is for data protection purposes
+     * when child process finishes, child process will join the parent process
+     * and set the parent process's joinPID to be null
+     */
     public void setJoinPIDNull(){
     	joinPID=null;
     }
@@ -113,6 +133,7 @@ public class UserProcess {
     public void addToExitStatus(int pid,int status){
     	childExitStatus.put(pid, status);
     }
+    
     /**
      * Execute the specified program with the specified arguments. Attempts to
      * load the program, and then forks a thread to run it.
@@ -137,7 +158,12 @@ public class UserProcess {
     
     
     /**
-     * 
+     * translate vpn to ppn
+     * illegal situation include vpn out of range, write a readonly page
+     *  or access invalid page
+     * @param vpn virtual page number
+     * @param writeFlag true if called by write method, false otherwise
+     * @return return the ppn or -1 on illegal page number
      */
     public int vpnToPpn(int vpn, boolean writeFlag)
     {
@@ -517,16 +543,16 @@ public class UserProcess {
     			parentProcess.setJoinPIDNull();
     		parentProcess.joinLock.release();
     	}
-    		UserKernel.numRunningProcessLock.acquire();
-    		UserKernel.numberOfRunningProcess--;
-    		if(UserKernel.numberOfRunningProcess==0)
-    		{
-    			UserKernel.numRunningProcessLock.release();
-    			Kernel.kernel.terminate();
-    			Lib.debug(dbgProcess,"\tThe termination has been started\n");
-    		}
-    		else
-    			UserKernel.numRunningProcessLock.release();
+    	UserKernel.numRunningProcessLock.acquire();
+    	UserKernel.numberOfRunningProcess--;
+    	if(UserKernel.numberOfRunningProcess==0)
+    	{
+    		UserKernel.numRunningProcessLock.release();
+    		Kernel.kernel.terminate();
+    		Lib.debug(dbgProcess,"\tThe termination has been started\n");
+    	}
+    	else
+    		UserKernel.numRunningProcessLock.release();
     	KThread.finish();
     }
     
@@ -558,7 +584,11 @@ public class UserProcess {
     	childProcess.setParentProcess(this);
     	childPID.add(childProcess.thisPid());
     	if(!childProcess.execute(executable,args))
+    	{
+    		childProcess.childClose(0);
+    		childProcess.childClose(1);
     		return -1;
+    	}
     	Lib.debug(dbgProcess, "Exec succeeded.\n");
     	return childProcess.thisPid();
     	
@@ -604,7 +634,7 @@ public class UserProcess {
     	if (name==null)
     		return -1;
     	int descriptor=-1;
-    	for(int i=2;i<maxFileNumber-2;i++)
+    	for(int i=2;i<maxFileNumber;i++)
     	{
     		if(fileDescriptor[i]==null)
     		{
@@ -638,7 +668,7 @@ public class UserProcess {
     	if (name==null)
     		return -1;
     	int descriptor=-1;
-    	for(int i=2;i<maxFileNumber-2;i++)
+    	for(int i=2;i<maxFileNumber;i++)
     	{
     		if(fileDescriptor[i]==null)
     		{
@@ -885,7 +915,7 @@ public class UserProcess {
     private UserProcess parentProcess;
     private Lock childExitStatusLock;
     private Lock joinLock;
-    private Condition joinCondition;
+    private Condition2 joinCondition;
 	private HashSet<Integer> childPID;
 	private HashMap<Integer,Integer> childExitStatus;
 	private Integer joinPID;
