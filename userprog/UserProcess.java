@@ -748,7 +748,7 @@ public class UserProcess {
     	{
     		writeSize=Math.min(size,bufferSize);
     		byteWrite=readVirtualMemory(buffAddr,buffer,0,writeSize);
-    		if (byteWrite==-1)
+    		if (byteWrite==0)
     			return -1;
     		byteWritten=file.write(buffer,0,byteWrite);
     		if(byteWritten!=byteWrite)
