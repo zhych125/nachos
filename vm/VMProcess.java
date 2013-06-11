@@ -348,7 +348,6 @@ public class VMProcess extends UserProcess {
     	pageTable[vpn].valid=true;
     	VMKernel.memoryMappingLock.release();
     	Lib.debug(dbgVM, "\tpage fault successfully handled\n");
-    	printPageTable();
     	return ppn;
     }
     /**
