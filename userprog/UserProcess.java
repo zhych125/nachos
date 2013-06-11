@@ -3,6 +3,8 @@ package nachos.userprog;
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
+import nachos.vm.VMKernel;
+import nachos.vm.VMProcess;
 
 import java.io.EOFException;
 import java.util.HashSet;
@@ -156,7 +158,6 @@ public class UserProcess {
 	return true;
     }
     
-    
     /**
      * translate vpn to ppn
      * illegal situation include vpn out of range, write a readonly page
@@ -177,10 +178,8 @@ public class UserProcess {
     			return -1;
     		pageTable[vpn].dirty=true;
     	}
-    	pageTable[vpn].used=true;
     	return pageTable[vpn].ppn;
     }
-    
     
     /**
      * Save the state of this process in preparation for a context switch.
@@ -463,9 +462,10 @@ public class UserProcess {
 
 	    for (int i=0; i<section.getLength(); i++) {
 		int vpn = section.getFirstVPN()+i;
-		
-		int ppn = vpnToPpn(vpn,false);
-		pageTable[s].readOnly=section.isReadOnly();
+		int ppn = pageTable[vpn].ppn;
+		Lib.debug(dbgProcess, "\tinitializing vpn: " + vpn +", ppn: "
+				+ppn+" \n");
+		pageTable[vpn].readOnly=section.isReadOnly();
 		section.loadPage(i, ppn);
 	    }
 	}
@@ -698,7 +698,7 @@ public class UserProcess {
 	{
 		Lib.debug(dbgProcess,"\tSystemcall read called " +
 				"with buffer Adrress being:"+buffAddr+", descriptor being: "
-				+descriptor+".\n");
+				+descriptor+"size being: "+size+".\n");
 		if (descriptor<0||descriptor>=maxFileNumber||size<0||buffAddr<0)
 			return -1;
 		int bufferSize=4096;//4KB
@@ -731,8 +731,8 @@ public class UserProcess {
 	private int handleWrite(int descriptor,int buffAddr, int size)
     {
     	Lib.debug(dbgProcess,"\tSystemcall write called " +
-    			"with buffer Adrress being:"+buffAddr+", descriptor being: "
-    			+descriptor+".\n");
+    			"with buffer Adrress being: "+buffAddr+", descriptor being: "
+    			+descriptor+", size being: "+size+".\n");
     	if (descriptor<0||descriptor>=maxFileNumber||size<0||buffAddr<0)
     		return -1;
     	int bufferSize=4096;//4KB

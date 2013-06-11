@@ -130,8 +130,8 @@ public class UserKernel extends ThreadedKernel {
     
     protected static int newPID;
     protected static int numberOfRunningProcess;
-    protected static LinkedList<Integer> availablePhysicalPages;
+    public static LinkedList<Integer> availablePhysicalPages;
     protected static Lock pidLock;
     protected static Lock numRunningProcessLock;
-    protected static Lock memoryMappingLock;
+    public static Lock memoryMappingLock;
 }
